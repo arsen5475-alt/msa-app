@@ -381,6 +381,10 @@ td.num input:focus{outline:none; background:#FFF6EE;}
   font-size:12px; cursor:pointer; font-weight:500; transition:.15s;
 }
 .chip:hover{border-color:var(--orange); color:var(--orange);}
+.tpl-label{font-size:11px; color:var(--encre-dim); font-weight:600; align-self:center; text-transform:uppercase; letter-spacing:.04em;}
+.chip-tpl{background:#FFF4EC; border-color:#FFD9BE; color:#C4571A;}
+.chip-tpl:hover{background:var(--orange); border-color:var(--orange); color:#fff;}
+#templateBar{margin-top:8px;}
 .add-blank{
   border:1px dashed #B9B2A5; color:var(--encre-dim); background:transparent; border-radius:8px;
   padding:7px 12px; font-size:12px; cursor:pointer;
@@ -943,6 +947,10 @@ td.num input:focus{outline:none; background:#FFF6EE;}
         <div class="stat-value blue" id="cptCotis">0,00 €</div>
         <div class="stat-label" data-i18n="acct.cotis">Cotisations<br>à prévoir *</div>
       </div>
+      <div class="mesure">
+        <div class="stat-value" id="cptDevisAcc" style="color:var(--vert);">0,00 €</div>
+        <div class="stat-label" data-i18n="acct.devisacc">Devis<br>acceptés</div>
+      </div>
     </div>
 
     <div class="sec"><h2 data-i18n="acct.impayes">Impayés</h2><span class="rule"></span><span class="count" id="impayeCount"></span></div>
@@ -1082,6 +1090,15 @@ td.num input:focus{outline:none; background:#FFF6EE;}
           <span class="chip" onclick="addLine('Revêtement de sol/mur','Fourniture et pose de carrelage / parquet')">Revêtement</span>
           <span class="chip" onclick="addLine('Plomberie','Raccordements d\'alimentation et d\'évacuation')">Plomberie</span>
           <span class="chip" onclick="addLine('Menuiserie','Fourniture et pose de fenêtres / portes')">Menuiserie</span>
+        </div>
+
+        <div class="add-row-bar" id="templateBar">
+          <span class="tpl-label">Modèles :</span>
+          <span class="chip chip-tpl" onclick="insertTemplate('sdb')">Salle de bain</span>
+          <span class="chip chip-tpl" onclick="insertTemplate('cuisine')">Cuisine</span>
+          <span class="chip chip-tpl" onclick="insertTemplate('piece')">Pièce / chambre</span>
+          <span class="chip chip-tpl" onclick="insertTemplate('peinture')">Peinture appart.</span>
+          <span class="chip chip-tpl" onclick="insertTemplate('reno')">Rénovation complète</span>
         </div>
 
         <div class="bottom">
@@ -1451,6 +1468,7 @@ const I18N = {
   'acct.encaisse':  {fr:'Encaissé<br>(recettes)', ru:'Получено<br>(доход)', hy:'Ստացված<br>(եկամուտ)', en:'Received<br>(revenue)', es:'Cobrado<br>(ingresos)'},
   'acct.reste':     {fr:'Reste à<br>encaisser', ru:'Осталось<br>получить', hy:'Մնում է<br>ստանալ', en:'Left to<br>collect', es:'Falta<br>cobrar'},
   'acct.cotis':     {fr:'Cotisations<br>à prévoir *', ru:'Взносы<br>к оплате *', hy:'Վճարներ<br>նախատեսվող *', en:'Contributions<br>to expect *', es:'Cotizaciones<br>previstas *'},
+  'acct.devisacc':  {fr:'Devis<br>acceptés', ru:'Принятые<br>сметы', hy:'Ընդունված<br>նախահաշիվ', en:'Accepted<br>quotes', es:'Presup.<br>aceptados'},
   'acct.impayes':   {fr:'Impayés', ru:'Неоплаченные', hy:'Չվճարված', en:'Unpaid', es:'Impagos'},
   'acct.livre':     {fr:'Livre des recettes', ru:'Книга доходов', hy:'Եկամուտների գիրք', en:'Revenue ledger', es:'Libro de ingresos'},
   'acct.export':    {fr:'Export CSV', ru:'Экспорт CSV', hy:'Արտահանել CSV', en:'Export CSV', es:'Exportar CSV'},
@@ -1662,6 +1680,59 @@ function addLine(title, desc, qte, unite, prix, materielClient){
   document.getElementById('itemsBody').appendChild(tr);
   recalcRow(id);
   if(title) onTitleFilled(id);
+}
+
+/* ===== Modèles de devis (une ligne par catégorie, prix repris de tes tarifs si connus) ===== */
+const DEVIS_TEMPLATES = {
+  sdb: { label:'Salle de bain', lines:[
+    {t:'Démolition', d:"Dépose de l'ancienne installation et évacuation des gravats", u:'fft'},
+    {t:'Plomberie', d:"Raccordements d'alimentation et d'évacuation", u:'fft'},
+    {t:'Plâtrerie / Placo', d:'Doublage et cloisons hydrofuges, bandes et enduit', u:'m2'},
+    {t:'Revêtement de sol/mur', d:'Fourniture et pose de carrelage sol et faïence murale', u:'m2'},
+    {t:'Peinture', d:'Préparation des supports et peinture du plafond', u:'m2'},
+  ]},
+  cuisine: { label:'Cuisine', lines:[
+    {t:'Démolition', d:"Dépose de l'ancienne cuisine et évacuation des gravats", u:'fft'},
+    {t:'Plomberie', d:"Raccordements évier et lave-vaisselle", u:'fft'},
+    {t:'Plâtrerie / Placo', d:'Reprises de cloisons et enduits', u:'m2'},
+    {t:'Revêtement de sol/mur', d:'Fourniture et pose de carrelage sol et crédence', u:'m2'},
+    {t:'Peinture', d:'Préparation des supports et peinture murs et plafond', u:'m2'},
+  ]},
+  piece: { label:'Pièce / chambre', lines:[
+    {t:'Plâtrerie / Placo', d:'Rebouchage et reprise des supports', u:'fft'},
+    {t:'Peinture', d:'Préparation, peinture des murs et du plafond', u:'m2'},
+    {t:'Revêtement de sol/mur', d:'Fourniture et pose de parquet / sol souple', u:'m2'},
+  ]},
+  peinture: { label:'Peinture appartement', lines:[
+    {t:'Plâtrerie / Placo', d:'Rebouchage des fissures et reprise des supports', u:'fft'},
+    {t:'Peinture', d:'Préparation et mise en peinture des murs et plafonds (ensemble du logement)', u:'m2'},
+  ]},
+  reno: { label:'Rénovation complète', lines:[
+    {t:'Démolition', d:'Dépose et évacuation des gravats', u:'fft'},
+    {t:'Plomberie', d:'Reprise des réseaux', u:'fft'},
+    {t:'Plâtrerie / Placo', d:'Cloisons, doublages, faux-plafonds, bandes et enduit', u:'m2'},
+    {t:'Revêtement de sol/mur', d:'Fourniture et pose des sols et carrelage', u:'m2'},
+    {t:'Peinture', d:'Préparation et mise en peinture complète', u:'m2'},
+  ]},
+};
+
+function insertTemplate(key){
+  const tpl = DEVIS_TEMPLATES[key];
+  if(!tpl) return;
+  // Si le devis ne contient qu'une ligne vide, on la retire pour partir propre
+  const body = document.getElementById('itemsBody');
+  const rows = body ? body.querySelectorAll('tr') : [];
+  if(rows.length === 1){
+    const r = rows[0];
+    const titre = r.querySelector('.desig-title').value.trim();
+    const prix = parseFloat(r.querySelector('.in-prix').value) || 0;
+    if(!titre && !prix) r.remove();
+  }
+  const prices = loadPrices();
+  tpl.lines.forEach(l=>{
+    const rec = prices[priceKey(l.t)];
+    addLine(l.t, l.d, 1, (rec && rec.unite) || l.u, rec ? rec.prix : 0, false);
+  });
 }
 
 function toggleMateriel(id){
@@ -1975,11 +2046,14 @@ function openHistory(){
     const clientFirstLine = (doc.client||'').split('\n')[0] || 'Client non renseigné';
     const st = docStatut(doc);
     const stBadge = st ? ` <span class="badge st-${st}">${statutFactureLabel(st)}</span>` : '';
+    const accBadge = (doc.type==='devis' && doc.accepte) ? ` <span class="badge st-payee">Accepté</span>` : '';
+    const accBtn = (doc.type==='devis') ? `<button class="btn ghost" onclick="toggleAccepte('${esc(doc.id)}')">${doc.accepte?'Annuler':'Accepté'}</button>` : '';
     const div = document.createElement('div');
     div.className = 'hist-item';
     div.innerHTML = `
-      <div class="info"><b>${esc(doc.number)}</b> · ${esc(doc.type.toUpperCase())}${stBadge}<br><span class="small">${esc(clientFirstLine)} — ${fmtEUR(doc.totalHT)}</span></div>
+      <div class="info"><b>${esc(doc.number)}</b> · ${esc(doc.type.toUpperCase())}${stBadge}${accBadge}<br><span class="small">${esc(clientFirstLine)} — ${fmtEUR(doc.totalHT)}</span></div>
       <div class="actions">
+        ${accBtn}
         <button class="btn ghost" onclick="loadDocument('${esc(doc.id)}')">Ouvrir</button>
         <button class="btn ghost" onclick="deleteDocument('${esc(doc.id)}')">Suppr.</button>
       </div>`;
@@ -1988,6 +2062,17 @@ function openHistory(){
   document.getElementById('historyModal').classList.remove('hidden');
 }
 function closeHistory(){ document.getElementById('historyModal').classList.add('hidden'); }
+
+// Marque / démarque un devis comme accepté ; sa somme alimente le cadre "Devis acceptés" en Comptabilité
+function toggleAccepte(id){
+  const all = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+  const doc = all.find(d=>d.id===id);
+  if(!doc || doc.type!=='devis') return;
+  doc.accepte = !doc.accepte;
+  localStorage.setItem(STORE_KEY, JSON.stringify(all));
+  openHistory();
+  renderCompta();
+}
 
 function loadDocument(id){
   const all = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
@@ -2919,6 +3004,12 @@ function renderCompta(){
   document.getElementById('cptEncaisse').textContent = fmtEUR(encaisse);
   document.getElementById('cptImpaye').textContent = fmtEUR(impaye);
   document.getElementById('cptCotis').textContent = fmtEUR(cotis);
+
+  // Devis acceptés : somme HT des devis marqués "accepté" sur la période
+  const devisAcc = all
+    .filter(d=> d.type==='devis' && d.accepte && (d.date1||'') >= startStr)
+    .reduce((s,d)=> s + (parseFloat(d.totalHT)||0), 0);
+  document.getElementById('cptDevisAcc').textContent = fmtEUR(devisAcc);
 
   // Impayés
   const impayes = all.filter(d=>d.type==='facture' && docReste(d) > 0.01)
