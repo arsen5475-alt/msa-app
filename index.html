@@ -479,7 +479,15 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 .tache-item.done input[type=text]{text-decoration:line-through; color:var(--craie-dim);}
 .photos-grid{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;}
 .photo-thumb{position:relative; width:88px; height:88px; border-radius:10px; overflow:hidden; border:1px solid var(--bord);}
-.photo-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+.photo-thumb img{width:100%; height:100%; object-fit:cover; display:block; cursor:pointer;}
+.photo-tag{
+  position:absolute; left:0; bottom:0; right:0; text-align:center; font-size:10px; font-weight:700;
+  padding:2px 0; cursor:pointer; letter-spacing:.03em; text-transform:uppercase; line-height:1.4;
+  border:none; color:#fff;
+}
+.photo-tag.none{background:rgba(0,0,0,.55); color:#cdd6df;}
+.photo-tag.avant{background:rgba(255,107,26,.85);}
+.photo-tag.apres{background:rgba(70,208,126,.85);}
 .photo-thumb button{
   position:absolute; top:3px; right:3px; background:rgba(0,0,0,.65); color:#fff; border:none;
   border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; line-height:1;
@@ -532,7 +540,10 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 .gal-group-head h3{font-size:15px; font-weight:600; color:var(--craie); margin:0;}
 .gal-group-head .n{font-family:var(--mono); font-size:11px; color:var(--craie-dim);}
 .gal-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:8px;}
-.gal-thumb{aspect-ratio:1; border-radius:12px; overflow:hidden; border:1px solid var(--glass-brd); cursor:pointer; background:var(--nuit-3); transition:transform .3s var(--ease);}
+.gal-thumb{aspect-ratio:1; border-radius:12px; overflow:hidden; border:1px solid var(--glass-brd); cursor:pointer; background:var(--nuit-3); transition:transform .3s var(--ease); position:relative;}
+.gal-thumb .gtag{position:absolute; left:0; right:0; bottom:0; text-align:center; font-size:10px; font-weight:700; padding:2px 0; text-transform:uppercase; color:#fff; letter-spacing:.03em;}
+.gal-thumb .gtag.avant{background:rgba(255,107,26,.85);}
+.gal-thumb .gtag.apres{background:rgba(70,208,126,.85);}
 .gal-thumb:hover{transform:scale(1.03);}
 .gal-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .lightbox{position:fixed; inset:0; z-index:210; background:rgba(4,8,13,.92); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:20px; animation:fade .2s;}
@@ -2471,11 +2482,28 @@ function renderPhotos(photos){
   const grid = document.getElementById('photosGrid');
   grid.innerHTML = '';
   tempPhotos.forEach((p,i)=>{
+    const tag = p.tag || 'none';
+    const label = tag==='avant' ? 'Avant' : (tag==='apres' ? 'Après' : '+ tag');
     const div = document.createElement('div');
     div.className = 'photo-thumb';
-    div.innerHTML = `<img src="${p.dataUrl}" alt=""><button onclick="deletePhoto(${i})">✕</button>`;
+    div.innerHTML = `<img src="${p.dataUrl}" alt="" onclick="openTempPhoto(${i})">
+      <span class="photo-tag ${tag}" onclick="cyclePhotoTag(${i})">${label}</span>
+      <button onclick="deletePhoto(${i})">✕</button>`;
     grid.appendChild(div);
   });
+}
+function openTempPhoto(i){
+  if(!tempPhotos[i]) return;
+  document.getElementById('lightboxImg').src = tempPhotos[i].dataUrl;
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+function cyclePhotoTag(i){
+  if(!tempPhotos[i]) return;
+  const order = ['none','avant','apres'];
+  const cur = tempPhotos[i].tag || 'none';
+  const next = order[(order.indexOf(cur)+1) % order.length];
+  tempPhotos[i].tag = next==='none' ? '' : next;
+  renderPhotos(tempPhotos);
 }
 function compressImage(file, maxDim, quality){
   return new Promise((resolve)=>{
@@ -3206,7 +3234,7 @@ function renderGalerie(){
   box.innerHTML = chantiers.map(ch=>{
     const thumbs = (ch.photos||[]).map(p=>{
       const i = idx++; galleryPhotos.push(p.dataUrl);
-      return `<div class="gal-thumb" onclick="openLightbox(${i})"><img src="${p.dataUrl}" alt="" loading="lazy"></div>`;
+      return `<div class="gal-thumb" onclick="openLightbox(${i})"><img src="${p.dataUrl}" alt="" loading="lazy">${p.tag==='avant'?'<span class="gtag avant">Avant</span>':(p.tag==='apres'?'<span class="gtag apres">Après</span>':'')}</div>`;
     }).join('');
     return `<div class="gal-group">
       <div class="gal-group-head"><h3>${esc((ch.adresse||'Chantier').split(',')[0])}</h3><span class="n">${(ch.photos||[]).length}</span></div>
