@@ -1364,6 +1364,7 @@ td.num input:focus{outline:none; background:#FFF6EE;}
       <div class="lbl" style="color:var(--craie-dim);" data-i18n="set.backup">Sauvegarde</div>
       <div class="small" id="setBackupDesc" style="margin:8px 0 14px;"></div>
       <button class="btn primary wide" onclick="exportBackup()" data-i18n="set.export" style="margin-top:0;">Exporter mes données</button>
+      <div id="setLastBackup" class="small" style="margin:8px 0 0;color:var(--craie-dim);text-align:center;"></div>
       <div class="small" id="setImportWarn" style="margin:18px 0 8px; color:var(--orange-2);"></div>
       <button class="btn wide" onclick="document.getElementById('importFile').click()" data-i18n="set.import" style="margin-top:0;">Importer une sauvegarde</button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none;" onchange="importBackup(event)">
@@ -3279,6 +3280,55 @@ const IMPORT_WARN = {
   en:"Importing replaces all current data. Export first if in doubt.",
   es:"Importar reemplaza todos los datos actuales. Exporta primero si tienes dudas."
 };
+const LAST_BACKUP_KEY = 'msa_last_backup_v1';
+const BACKUP_INTERVAL_DAYS = 7;
+const BACKUP_REMIND = {
+  fr:"Ça fait un moment sans sauvegarde. Garde une copie de tes données au chaud.",
+  ru:"Давно не было резервной копии. Сохрани копию своих данных на всякий случай.",
+  hy:"Վաղուց պահուստ չի եղել։ Պահիր քո տվյալների պատճենը ապահով տեղում։",
+  en:"It's been a while since your last backup. Keep a copy of your data safe.",
+  es:"Hace tiempo que no haces copia. Guarda una copia de tus datos por si acaso."
+};
+const BACKUP_BTN = { fr:"Sauvegarder", ru:"Сохранить", hy:"Պահել", en:"Save", es:"Guardar" };
+const BACKUP_NEVER = { fr:"jamais", ru:"никогда", hy:"երբեք", en:"never", es:"nunca" };
+const BACKUP_LAST_PREFIX = { fr:"Dernière sauvegarde : ", ru:"Последняя копия: ", hy:"Վերջին պահուստ՝ ", en:"Last backup: ", es:"Última copia: " };
+
+function hasRealData(){
+  try{
+    const docs = JSON.parse(localStorage.getItem(STORE_KEY)||'[]').length;
+    const clients = JSON.parse(localStorage.getItem(CLIENTS_KEY)||'[]').length;
+    const chantiers = JSON.parse(localStorage.getItem(CHANTIERS_KEY)||'[]').length;
+    return (docs+clients+chantiers) > 0;
+  }catch(e){ return false; }
+}
+function lastBackupLabel(){
+  const iso = localStorage.getItem(LAST_BACKUP_KEY);
+  const prefix = BACKUP_LAST_PREFIX[currentLang]||BACKUP_LAST_PREFIX.fr;
+  if(!iso) return prefix + (BACKUP_NEVER[currentLang]||BACKUP_NEVER.fr);
+  const d = new Date(iso);
+  return prefix + d.toLocaleDateString(currentLang==='fr'?'fr-FR':currentLang);
+}
+function checkBackupReminder(){
+  if(!hasRealData()) return;
+  if(document.getElementById('backupHint')) return;
+  const iso = localStorage.getItem(LAST_BACKUP_KEY);
+  let overdue = true;
+  if(iso){
+    const days = (Date.now() - new Date(iso).getTime()) / 86400000;
+    overdue = days >= BACKUP_INTERVAL_DAYS;
+  }
+  if(!overdue) return;
+  const bar = document.createElement('div');
+  bar.id = 'backupHint';
+  bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:120;background:rgba(19,30,42,.95);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:pop .4s ease';
+  bar.innerHTML = '<div style="flex:1;font-size:13.5px;color:#ECE7DE">💾 '+(BACKUP_REMIND[currentLang]||BACKUP_REMIND.fr)+'</div>'+
+    '<button id="backupYes" style="background:linear-gradient(145deg,#FF8A45,#FF6B1A);color:#0B131C;border:none;border-radius:11px;padding:10px 16px;font-weight:600;font-size:13px;cursor:pointer">'+(BACKUP_BTN[currentLang]||BACKUP_BTN.fr)+'</button>'+
+    '<button id="backupNo" style="background:none;border:none;color:#8DA0B2;font-size:20px;cursor:pointer;line-height:1">&times;</button>';
+  document.body.appendChild(bar);
+  document.getElementById('backupYes').onclick = function(){ exportBackup(); };
+  document.getElementById('backupNo').onclick = function(){ bar.remove(); };
+}
+
 function collectAllData(){
   const data = {};
   for(let i=0;i<localStorage.length;i++){
@@ -3307,6 +3357,7 @@ function openSettings(){
   const clients = JSON.parse(localStorage.getItem(CLIENTS_KEY)||'[]').length;
   const chantiers = JSON.parse(localStorage.getItem(CHANTIERS_KEY)||'[]').length;
   document.getElementById('setStats').textContent = chantiers+' chantiers · '+clients+' clients · '+docs+' documents';
+  var bd = document.getElementById('setLastBackup'); if(bd) bd.textContent = lastBackupLabel();
   const legal = loadLegal();
   document.getElementById('setAssureur').value = legal.assureur||'';
   document.getElementById('setAssurZone').value = legal.assurZone||'';
@@ -3327,6 +3378,9 @@ function exportBackup(){
   a.download = 'msa-sauvegarde-' + todayStr() + '.json';
   a.click();
   URL.revokeObjectURL(url);
+  localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString());
+  var hint = document.getElementById('backupHint'); if(hint) hint.remove();
+  var bd = document.getElementById('setLastBackup'); if(bd) bd.textContent = lastBackupLabel();
 }
 function importBackup(event){
   const file = event.target.files && event.target.files[0];
@@ -3355,6 +3409,7 @@ function importBackup(event){
 applyLang();
 switchView('accueil');
 populateDocChantierSelect();
+setTimeout(checkBackupReminder, 2500);
 document.addEventListener('click', e=>{
   const sw = document.querySelector('.lang-switch');
   const menu = document.getElementById('langMenu');
