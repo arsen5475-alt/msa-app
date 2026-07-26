@@ -352,7 +352,7 @@ table.items thead th.num{text-align:right;}
 table.items tbody td{padding:11px; vertical-align:top; border-bottom:1px solid var(--trait);}
 table.items tbody tr:nth-child(even){background:var(--papier-2);}
 table.items tbody td.num{text-align:right; white-space:nowrap;}
-.desig-title{border:none; background:transparent; font-weight:600; font-size:13.5px; width:100%; color:var(--encre); padding:1px 0;}
+.desig-title{border:none; background:transparent; font-weight:600; font-size:13.5px; width:100%; color:var(--encre); padding:1px 0; font-family:inherit; line-height:1.35; resize:none; overflow:hidden; display:block;}
 .desig-desc{
   border:none; background:transparent; font-size:12.5px; width:100%; resize:vertical; min-height:20px;
   color:#4A5666; padding:1px 0; font-family:inherit; line-height:1.5;
@@ -1669,7 +1669,7 @@ function addLine(title, desc, qte, unite, prix, materielClient){
   tr.id = id;
   tr.innerHTML = `
     <td>
-      <input class="desig-title" list="pricesDatalist" value="${esc(title)}" placeholder="Nom de la catégorie" oninput="onTitleFilled('${id}')" onchange="onTitleFilled('${id}')">
+      <textarea class="desig-title" rows="1" placeholder="Nom de la catégorie" oninput="onTitleFilled('${id}'); autoGrowTitle(this)" onchange="onTitleFilled('${id}')">${esc(title)}</textarea>
       <span class="price-hint" style="display:none;" onclick="applyPriceHint('${id}')" title="Appliquer ce prix">💰 <span class="ph-val"></span> <span class="ph-apply">appliquer</span></span>
       <textarea class="desig-desc" rows="2" placeholder="Description (facultatif)">${esc(desc)}</textarea>
       <label class="fourniture-toggle"><input type="checkbox" class="materiel-client" ${materielClient?'checked':''} onchange="toggleMateriel('${id}')"> Le client fournit le matériel</label>
@@ -1691,6 +1691,15 @@ function addLine(title, desc, qte, unite, prix, materielClient){
   document.getElementById('itemsBody').appendChild(tr);
   recalcRow(id);
   if(title) onTitleFilled(id);
+  const ta = tr.querySelector('.desig-title');
+  if(ta) autoGrowTitle(ta);
+}
+
+// Ajuste la hauteur du champ "désignation" à son contenu (le texte long ne se coupe plus)
+function autoGrowTitle(el){
+  if(!el) return;
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
 }
 
 /* ===== Modèles de devis (une ligne par catégorie, prix repris de tes tarifs si connus) ===== */
