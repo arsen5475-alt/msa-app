@@ -3437,19 +3437,11 @@ document.addEventListener('click', e=>{
     document.head.appendChild(mlink);
   }catch(e){}
 
-  // Service worker inline pour le hors-ligne (met en cache la page elle-même)
+  // Service worker (fichier réel servi par le serveur) pour un vrai fonctionnement hors-ligne
   if('serviceWorker' in navigator){
-    var swCode = "self.addEventListener('install',e=>self.skipWaiting());" +
-      "self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));" +
-      "self.addEventListener('fetch',function(e){" +
-      "  e.respondWith(fetch(e.request).then(function(r){" +
-      "    var c=r.clone(); caches.open('msa-v1').then(function(cache){cache.put(e.request,c);}); return r;" +
-      "  }).catch(function(){ return caches.match(e.request); }));" +
-      "});";
-    try{
-      var swBlob = new Blob([swCode], {type:'text/javascript'});
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function(){});
-    }catch(e){}
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(){});
+    });
   }
 
   // Bouton d'installation (Android/Chrome/Edge)
