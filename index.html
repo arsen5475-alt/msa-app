@@ -473,16 +473,53 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 .win-tabs button.active{color:var(--orange); border-bottom-color:var(--orange);}
 .win-tabpane.hidden{display:none;}
 
-/* Chantier : version compacte (plus dense, moins de vide) — n'affecte que cet écran */
-#chantierModal .win-body{padding:13px 15px 14px;}
-#chantierModal .win-titlebar{padding:13px 15px 11px;}
-#chantierModal .win-tabs{margin-bottom:11px; gap:0;}
-#chantierModal .win-tabs button{padding:8px 10px; font-size:10px; letter-spacing:.04em;}
-#chantierModal .field-row{gap:10px; margin-bottom:8px;}
-#chantierModal .field label{margin-bottom:4px;}
-#chantierModal .field input,#chantierModal .field select,#chantierModal .field textarea{padding:8px 11px; border-radius:9px; font-size:12.5px;}
-#chantierModal #chClientText{margin-top:6px;}
-#chantierModal .modal-footer{margin-top:12px; padding-top:12px;}
+/* ===== Chantier — style COSMOS (écran lumineux) : n'affecte que cet écran ===== */
+#chantierModal .modal-card{
+  background:linear-gradient(180deg, rgba(17,24,38,.95), rgba(10,15,26,.97));
+  box-shadow:0 0 60px rgba(122,92,255,.30), 0 0 90px rgba(255,107,26,.18), 0 30px 80px rgba(0,0,0,.6);
+  position:relative;
+}
+#chantierModal .modal-card::before{
+  content:""; position:absolute; inset:0; border-radius:22px; padding:1.5px; pointer-events:none; z-index:2;
+  background:linear-gradient(135deg, rgba(255,138,69,.9), rgba(122,92,255,.85) 55%, rgba(55,224,200,.7));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+}
+#chantierModal .cosmos-stars{position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none; border-radius:22px;}
+#chantierModal .cosmos-stars i{position:absolute; width:2px; height:2px; border-radius:50%; background:#fff;
+  box-shadow:0 0 6px 1px rgba(255,255,255,.6); animation:twCosmicStar 3s ease-in-out infinite;}
+@keyframes twCosmicStar{0%,100%{opacity:.2; transform:scale(.8);} 50%{opacity:.85; transform:scale(1.2);}}
+#chantierModal .win-titlebar,#chantierModal .win-body{position:relative; z-index:3;}
+#chantierModal .win-titlebar{background:radial-gradient(600px 120px at 20% 0%, rgba(255,138,69,.12), transparent 70%);}
+#chantierModal .win-titlebar h3{
+  font-size:17px; font-weight:800;
+  background:linear-gradient(90deg,#fff,#FFD9BE 40%,var(--orange-2));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow:0 0 22px rgba(255,138,69,.30);
+}
+#chantierModal .win-tabs{gap:6px; border-bottom:none; margin-bottom:16px;}
+#chantierModal .win-tabs button{
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:13px;
+  padding:9px 13px; font-size:10.5px; color:var(--craie-dim); transition:.2s;
+}
+#chantierModal .win-tabs button.active{
+  color:#0B131C; border-color:transparent;
+  background:linear-gradient(135deg,var(--orange-2),var(--orange));
+  box-shadow:0 0 20px rgba(255,107,26,.55), 0 6px 16px rgba(255,107,26,.3);
+}
+#chantierModal .field input,#chantierModal .field select,#chantierModal .field textarea{
+  border-radius:13px; background:rgba(0,0,0,.32); border:1px solid rgba(255,255,255,.1);
+}
+#chantierModal .field input:focus,#chantierModal .field select:focus,#chantierModal .field textarea:focus{
+  border-color:var(--orange); box-shadow:0 0 0 3px rgba(255,107,26,.16), 0 0 20px rgba(255,107,26,.22);
+  background:rgba(0,0,0,.45);
+}
+#chantierModal .modal-footer .btn.primary{
+  background:linear-gradient(135deg,var(--orange-2),var(--orange)); color:#0B131C; border:none; font-weight:800;
+  box-shadow:0 0 26px rgba(255,107,26,.55), 0 8px 20px rgba(255,107,26,.35);
+  animation:pulseCosmicSave 2.6s ease-in-out infinite;
+}
+@keyframes pulseCosmicSave{0%,100%{box-shadow:0 0 20px rgba(255,107,26,.45), 0 8px 20px rgba(255,107,26,.3);} 50%{box-shadow:0 0 38px rgba(255,107,26,.8), 0 8px 24px rgba(255,107,26,.45);}}
 .tache-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bord); font-size:13px;}
 .tache-item input[type=checkbox]{accent-color:var(--orange); width:17px; height:17px;}
 .tache-item input[type=text]{flex:1; border:none; background:transparent; color:var(--craie); font-size:13px;}
@@ -1170,6 +1207,7 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 <!-- ===== MODALE CHANTIER ===== -->
 <div class="modal hidden" id="chantierModal">
   <div class="modal-card wide">
+    <div class="cosmos-stars" id="cosmosStars"></div>
     <div class="win-titlebar">
       <h3 id="chantierModalTitle">Nouveau chantier</h3>
       <span class="win-label">CHANTIER</span>
@@ -2093,6 +2131,20 @@ function openHistory(){
   document.getElementById('historyModal').classList.remove('hidden');
 }
 function closeHistory(){ document.getElementById('historyModal').classList.add('hidden'); }
+
+// Rassemble les petites étoiles scintillantes dans l'écran Chantier (style Cosmos)
+function buildCosmosStars(){
+  const box = document.getElementById('cosmosStars');
+  if(!box || box.childElementCount) return;
+  for(let i=0;i<42;i++){
+    const s = document.createElement('i');
+    s.style.left = (Math.random()*100) + '%';
+    s.style.top = (Math.random()*100) + '%';
+    s.style.animationDelay = (Math.random()*3) + 's';
+    s.style.opacity = (0.2 + Math.random()*0.5);
+    box.appendChild(s);
+  }
+}
 
 // Marque / démarque un devis comme accepté ; sa somme alimente le cadre "Devis acceptés" en Comptabilité
 function toggleAccepte(id){
@@ -3548,6 +3600,7 @@ function importBackup(event){
 applyLang();
 switchView('accueil');
 populateDocChantierSelect();
+buildCosmosStars();
 setTimeout(checkBackupReminder, 2500);
 document.addEventListener('click', e=>{
   const sw = document.querySelector('.lang-switch');

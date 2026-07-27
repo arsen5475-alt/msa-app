@@ -1,6 +1,6 @@
 // MSA — service worker hors-ligne
 // Met l'application en cache dès l'installation pour un fonctionnement complet sans réseau.
-var CACHE = 'msa-v2';
+var CACHE = 'msa-v3';
 var SHELL = ['/', '/index.html'];
 
 self.addEventListener('install', function(e){
