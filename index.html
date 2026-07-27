@@ -472,6 +472,17 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 }
 .win-tabs button.active{color:var(--orange); border-bottom-color:var(--orange);}
 .win-tabpane.hidden{display:none;}
+
+/* Chantier : version compacte (plus dense, moins de vide) — n'affecte que cet écran */
+#chantierModal .win-body{padding:13px 15px 14px;}
+#chantierModal .win-titlebar{padding:13px 15px 11px;}
+#chantierModal .win-tabs{margin-bottom:11px; gap:0;}
+#chantierModal .win-tabs button{padding:8px 10px; font-size:10px; letter-spacing:.04em;}
+#chantierModal .field-row{gap:10px; margin-bottom:8px;}
+#chantierModal .field label{margin-bottom:4px;}
+#chantierModal .field input,#chantierModal .field select,#chantierModal .field textarea{padding:8px 11px; border-radius:9px; font-size:12.5px;}
+#chantierModal #chClientText{margin-top:6px;}
+#chantierModal .modal-footer{margin-top:12px; padding-top:12px;}
 .tache-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bord); font-size:13px;}
 .tache-item input[type=checkbox]{accent-color:var(--orange); width:17px; height:17px;}
 .tache-item input[type=text]{flex:1; border:none; background:transparent; color:var(--craie); font-size:13px;}
