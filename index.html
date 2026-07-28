@@ -520,6 +520,33 @@ td.num input:focus{outline:none; background:#FFF6EE;}
   animation:pulseCosmicSave 2.6s ease-in-out infinite;
 }
 @keyframes pulseCosmicSave{0%,100%{box-shadow:0 0 20px rgba(255,107,26,.45), 0 8px 20px rgba(255,107,26,.3);} 50%{box-shadow:0 0 38px rgba(255,107,26,.8), 0 8px 24px rgba(255,107,26,.45);}}
+
+/* ===== Liste Chantiers — style GALAXIE ===== */
+#view-chantiers{position:relative;
+  background:
+    radial-gradient(900px 500px at 12% -5%, rgba(122,92,255,.18), transparent 60%),
+    radial-gradient(800px 500px at 105% 8%, rgba(255,107,26,.14), transparent 55%),
+    radial-gradient(700px 700px at 50% 115%, rgba(55,224,200,.10), transparent 60%);
+  border-radius:20px;
+}
+#view-chantiers > .sec,#view-chantiers > .panel-toolbar,#view-chantiers > #chantiersGrid{position:relative; z-index:2;}
+#view-chantiers .cosmos-stars{position:absolute; z-index:1; border-radius:20px;}
+#chantiersGrid .chantier-card{
+  background:linear-gradient(180deg, rgba(19,27,42,.92), rgba(11,16,28,.95));
+  border:1px solid rgba(255,255,255,.08); border-left:3px solid var(--craie-dim);
+  box-shadow:0 0 34px rgba(122,92,255,.14), 0 14px 34px rgba(0,0,0,.5);
+}
+#chantiersGrid .chantier-card::after{
+  content:""; position:absolute; inset:0; border-radius:18px; padding:1px; pointer-events:none; opacity:.55;
+  background:linear-gradient(135deg, rgba(255,138,69,.7), rgba(122,92,255,.6) 55%, rgba(55,224,200,.5));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+}
+#chantiersGrid .chantier-card:hover{
+  box-shadow:0 0 46px rgba(255,107,26,.32), 0 0 60px rgba(122,92,255,.24), 0 18px 44px rgba(0,0,0,.55);
+}
+#chantiersGrid .chantier-card.st-encours{box-shadow:0 0 40px rgba(255,107,26,.28), 0 14px 34px rgba(0,0,0,.5);}
+#chantiersGrid .chantier-card.st-termine{box-shadow:0 0 40px rgba(70,208,126,.24), 0 14px 34px rgba(0,0,0,.5);}
 .tache-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bord); font-size:13px;}
 .tache-item input[type=checkbox]{accent-color:var(--orange); width:17px; height:17px;}
 .tache-item input[type=text]{flex:1; border:none; background:transparent; color:var(--craie); font-size:13px;}
@@ -926,6 +953,7 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 
   <!-- ===== CHANTIERS ===== -->
   <div class="view hidden" id="view-chantiers">
+    <div class="cosmos-stars" id="cosmosStarsChantiers"></div>
     <div class="sec"><h2 data-i18n="sites.title">Chantiers</h2><span class="rule"></span></div>
     <div class="panel-toolbar">
       <button class="btn primary" onclick="openChantierDetail(null)" data-i18n="sites.new">Nouveau chantier</button>
@@ -2132,11 +2160,10 @@ function openHistory(){
 }
 function closeHistory(){ document.getElementById('historyModal').classList.add('hidden'); }
 
-// Rassemble les petites étoiles scintillantes dans l'écran Chantier (style Cosmos)
-function buildCosmosStars(){
-  const box = document.getElementById('cosmosStars');
+// Rassemble les petites étoiles scintillantes (style Cosmos / Galaxie)
+function fillStars(box, n){
   if(!box || box.childElementCount) return;
-  for(let i=0;i<42;i++){
+  for(let i=0;i<n;i++){
     const s = document.createElement('i');
     s.style.left = (Math.random()*100) + '%';
     s.style.top = (Math.random()*100) + '%';
@@ -2144,6 +2171,10 @@ function buildCosmosStars(){
     s.style.opacity = (0.2 + Math.random()*0.5);
     box.appendChild(s);
   }
+}
+function buildCosmosStars(){
+  fillStars(document.getElementById('cosmosStars'), 42);
+  fillStars(document.getElementById('cosmosStarsChantiers'), 55);
 }
 
 // Marque / démarque un devis comme accepté ; sa somme alimente le cadre "Devis acceptés" en Comptabilité
