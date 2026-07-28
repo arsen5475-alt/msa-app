@@ -576,6 +576,29 @@ td.num input:focus{outline:none; background:#FFF6EE;}
   box-shadow:0 0 22px rgba(122,92,255,.1), 0 8px 20px rgba(0,0,0,.4);
 }
 #view-accueil .quick-tile:hover{box-shadow:0 0 30px rgba(255,107,26,.22), 0 10px 24px rgba(0,0,0,.45);}
+
+/* ===== Calendrier — style GALAXIE ===== */
+#view-calendrier{position:relative;
+  background:
+    radial-gradient(900px 500px at 12% -6%, rgba(122,92,255,.16), transparent 60%),
+    radial-gradient(800px 500px at 106% 6%, rgba(255,107,26,.12), transparent 55%),
+    radial-gradient(760px 760px at 50% 118%, rgba(55,224,200,.09), transparent 60%);
+  border-radius:20px;
+}
+#view-calendrier > *{position:relative; z-index:2;}
+#view-calendrier .cosmos-stars{position:absolute; z-index:1; border-radius:20px;}
+#view-calendrier .cal-cell{
+  background:linear-gradient(180deg, rgba(19,27,42,.88), rgba(11,16,28,.92));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 0 16px rgba(122,92,255,.1), inset 0 1px 0 var(--glass-hi);
+}
+#view-calendrier .cal-cell:hover{box-shadow:0 0 26px rgba(255,107,26,.24), inset 0 1px 0 var(--glass-hi);}
+#view-calendrier .cal-nav{box-shadow:0 0 18px rgba(122,92,255,.2);}
+#view-calendrier .cal-head h2{
+  background:linear-gradient(90deg,#fff,#FFD9BE 40%,var(--orange-2));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow:0 0 20px rgba(255,138,69,.3);
+}
 .tache-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bord); font-size:13px;}
 .tache-item input[type=checkbox]{accent-color:var(--orange); width:17px; height:17px;}
 .tache-item input[type=text]{flex:1; border:none; background:transparent; color:var(--craie); font-size:13px;}
@@ -1031,6 +1054,7 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 
   <!-- ===== CALENDRIER ===== -->
   <div class="view hidden" id="view-calendrier">
+    <div class="cosmos-stars" id="cosmosStarsCal"></div>
     <div class="cal-head">
       <button class="cal-nav" onclick="calMove(-1)" aria-label="Mois précédent">‹</button>
       <h2 id="calMonthLabel">—</h2>
@@ -2215,6 +2239,7 @@ function buildCosmosStars(){
   fillStars(document.getElementById('cosmosStars'), 42);
   fillStars(document.getElementById('cosmosStarsChantiers'), 55);
   fillStars(document.getElementById('cosmosStarsAccueil'), 55);
+  fillStars(document.getElementById('cosmosStarsCal'), 50);
 }
 
 // Marque / démarque un devis comme accepté ; sa somme alimente le cadre "Devis acceptés" en Comptabilité
