@@ -673,6 +673,15 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 .mbar .mbf{width:100%; max-width:26px; border-radius:6px 6px 0 0; background:linear-gradient(180deg, var(--orange-2), var(--orange)); transition:height .7s var(--ease); min-height:2px;}
 .mbar .mbl{font-family:var(--mono); font-size:8.5px; color:var(--craie-dim); white-space:nowrap;}
 .mbar .mbv{font-family:var(--mono); font-size:8px; color:var(--jaune); white-space:nowrap;}
+.mbar-cols{display:flex; align-items:flex-end; justify-content:center; gap:3px; height:100%; width:100%;}
+.mbar-cols .mbf{width:13px; max-width:13px; border-radius:5px 5px 0 0; transition:height .7s var(--ease); min-height:2px;}
+.mbar-cols .mbf.ca{background:linear-gradient(180deg, var(--orange-2), var(--orange)); box-shadow:0 0 10px rgba(255,107,26,.4);}
+.mbar-cols .mbf.ben{background:linear-gradient(180deg, #6ee89a, var(--vert)); box-shadow:0 0 10px rgba(70,208,126,.4);}
+.chart-legend{display:flex; gap:16px; margin-bottom:10px; font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--craie-dim);}
+.chart-legend .cl{display:flex; align-items:center; gap:6px;}
+.chart-legend .sw{width:10px; height:10px; border-radius:3px; flex:none;}
+.chart-legend .sw.ca{background:linear-gradient(135deg,var(--orange-2),var(--orange));}
+.chart-legend .sw.ben{background:linear-gradient(135deg,#6ee89a,var(--vert));}
 .donut-wrap{display:flex; align-items:center; gap:16px;}
 .donut-legend{font-size:12px; line-height:1.9;}
 .donut-legend .dl{display:flex; align-items:center; gap:7px; color:var(--craie-dim);}
@@ -1644,7 +1653,7 @@ const I18N = {
   'quote.convert':  {fr:'Convertir en facture', ru:'В фактуру', hy:'Դարձնել հաշիվ', en:'Convert to invoice', es:'Convertir en factura'},
   'acct.exportxls': {fr:'Export Excel', ru:'Экспорт Excel', hy:'Արտահանել Excel', en:'Export Excel', es:'Exportar Excel'},
   'acct.analytics': {fr:'Analytique', ru:'Аналитика', hy:'Վերլուծություն', en:'Analytics', es:'Analítica'},
-  'acct.revbymonth':{fr:'Encaissements par mois', ru:'Доход по месяцам', hy:'Ամսական մուտքեր', en:'Revenue by month', es:'Ingresos por mes'},
+  'acct.revbymonth':{fr:'CA & bénéfice par mois', ru:'Оборот и прибыль по месяцам', hy:'Շրջանառություն և շահույթ ամսական', en:'Revenue & profit by month', es:'Ingresos y beneficio por mes'},
   'acct.topclients':{fr:'Meilleurs clients', ru:'Лучшие клиенты', hy:'Լավագույն հաճախորդներ', en:'Top clients', es:'Mejores clientes'},
   'acct.invstatus': {fr:'Statut des factures', ru:'Статус фактур', hy:'Հաշիվների կարգավիճակ', en:'Invoice status', es:'Estado facturas'},
   'set.legal':      {fr:'Infos légales (sur devis et factures)', ru:'Юр. данные (в девисах и фактурах)', hy:'Իրավական տվյալներ', en:'Legal info (on quotes & invoices)', es:'Datos legales'},
@@ -3388,24 +3397,48 @@ const MOIS_COURT = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','o
 function renderCharts(){
   const all = JSON.parse(localStorage.getItem(STORE_KEY)||'[]');
 
-  // 1) Encaissements des 6 derniers mois
+  // 1) Chiffre d'affaires encaissé + bénéfice (marge matière) des 6 derniers mois
   const now = new Date();
   const months = [];
-  for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(), now.getMonth()-i, 1); months.push({y:d.getFullYear(), m:d.getMonth(), total:0}); }
+  for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(), now.getMonth()-i, 1); months.push({y:d.getFullYear(), m:d.getMonth(), total:0, profit:0}); }
+
+  // Matériaux achetés et total encaissé, par chantier → pour répartir la marge sur les mois de paiement
+  const chById = {};
+  (JSON.parse(localStorage.getItem(CHANTIERS_KEY)||'[]')).forEach(ch=>{
+    const mat = (ch.materiaux||[]).reduce((s,m)=> m.achete ? s+(parseFloat(m.qte)||0)*(parseFloat(m.prix)||0) : s, 0);
+    chById[ch.id] = { mat:mat, enc:0 };
+  });
+  all.forEach(doc=>{
+    if(!doc.chantierId || !chById[doc.chantierId]) return;
+    chById[doc.chantierId].enc += (doc.encaissements||[]).reduce((s,e)=>s+(parseFloat(e.montant)||0),0);
+  });
+
   all.forEach(doc=>{ (doc.encaissements||[]).forEach(e=>{
     if(!e.date) return;
     const d = new Date(e.date);
     const slot = months.find(x=>x.y===d.getFullYear() && x.m===d.getMonth());
-    if(slot) slot.total += parseFloat(e.montant)||0;
+    if(!slot) return;
+    const montant = parseFloat(e.montant)||0;
+    slot.total += montant;
+    // part de matériaux imputée à cet encaissement (proportionnelle au paiement dans le chantier)
+    let matShare = 0;
+    const c = doc.chantierId ? chById[doc.chantierId] : null;
+    if(c && c.enc>0) matShare = (montant / c.enc) * c.mat;
+    slot.profit += (montant - matShare);
   }); });
-  const maxM = Math.max(1, ...months.map(x=>x.total));
+
+  const maxM = Math.max(1, ...months.map(x=>Math.max(x.total, x.profit)));
   const cm = document.getElementById('chartMonths');
   if(months.every(x=>x.total===0)){
     cm.innerHTML = '<div class="chart-empty">Pas encore d\'encaissements. Note un paiement sur une facture.</div>';
   } else {
-    cm.innerHTML = '<div class="mbars">' + months.map(x=>{
-      const h = Math.round(x.total/maxM*100);
-      return `<div class="mbar"><div class="mbv">${x.total?Math.round(x.total):''}</div><div class="mbf" style="height:${h}%"></div><div class="mbl">${MOIS_COURT[x.m]}</div></div>`;
+    const legend = '<div class="chart-legend"><span class="cl"><span class="sw ca"></span>Chiffre d\'affaires</span><span class="cl"><span class="sw ben"></span>Bénéfice</span></div>';
+    cm.innerHTML = legend + '<div class="mbars">' + months.map(x=>{
+      const hCA = Math.round(x.total/maxM*100);
+      const hBen = Math.round(Math.max(0,x.profit)/maxM*100);
+      return `<div class="mbar"><div class="mbv">${x.total?Math.round(x.total):''}</div>`+
+        `<div class="mbar-cols"><div class="mbf ca" style="height:${hCA}%"></div><div class="mbf ben" style="height:${hBen}%"></div></div>`+
+        `<div class="mbl">${MOIS_COURT[x.m]}</div></div>`;
     }).join('') + '</div>';
   }
 
