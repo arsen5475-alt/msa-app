@@ -547,6 +547,35 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 }
 #chantiersGrid .chantier-card.st-encours{box-shadow:0 0 40px rgba(255,107,26,.28), 0 14px 34px rgba(0,0,0,.5);}
 #chantiersGrid .chantier-card.st-termine{box-shadow:0 0 40px rgba(70,208,126,.24), 0 14px 34px rgba(0,0,0,.5);}
+
+/* ===== Accueil — style GALAXIE ===== */
+#view-accueil{position:relative;
+  background:
+    radial-gradient(1000px 520px at 10% -6%, rgba(122,92,255,.16), transparent 60%),
+    radial-gradient(820px 520px at 108% 6%, rgba(255,107,26,.13), transparent 55%),
+    radial-gradient(760px 760px at 50% 118%, rgba(55,224,200,.09), transparent 60%);
+  border-radius:20px;
+}
+#view-accueil > *{position:relative; z-index:2;}
+#view-accueil .cosmos-stars{position:absolute; z-index:1; border-radius:20px;}
+#view-accueil .stat-card{
+  background:linear-gradient(180deg, rgba(19,27,42,.9), rgba(11,16,28,.94));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 0 26px rgba(122,92,255,.12), 0 10px 26px rgba(0,0,0,.45);
+}
+#view-accueil .stat-card::before{
+  content:""; position:absolute; inset:0; border-radius:16px; padding:1px; pointer-events:none; opacity:.5;
+  background:linear-gradient(135deg, rgba(255,138,69,.6), rgba(122,92,255,.5) 55%, rgba(55,224,200,.4));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+}
+#view-accueil .stat-card:hover{box-shadow:0 0 34px rgba(255,107,26,.24), 0 0 48px rgba(122,92,255,.18), 0 12px 30px rgba(0,0,0,.5);}
+#view-accueil .ai-card{box-shadow:0 0 40px rgba(122,92,255,.2), 0 14px 34px rgba(0,0,0,.5);}
+#view-accueil .quick-tile{
+  background:linear-gradient(180deg, rgba(19,27,42,.9), rgba(11,16,28,.94));
+  box-shadow:0 0 22px rgba(122,92,255,.1), 0 8px 20px rgba(0,0,0,.4);
+}
+#view-accueil .quick-tile:hover{box-shadow:0 0 30px rgba(255,107,26,.22), 0 10px 24px rgba(0,0,0,.45);}
 .tache-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bord); font-size:13px;}
 .tache-item input[type=checkbox]{accent-color:var(--orange); width:17px; height:17px;}
 .tache-item input[type=text]{flex:1; border:none; background:transparent; color:var(--craie); font-size:13px;}
@@ -869,6 +898,7 @@ td.num input:focus{outline:none; background:#FFF6EE;}
 
   <!-- ===== ACCUEIL ===== -->
   <div class="view" id="view-accueil">
+    <div class="cosmos-stars" id="cosmosStarsAccueil"></div>
     <div class="stats-grid">
       <div class="stat-card orange">
         <div class="sc-ico">🏗️</div>
@@ -2175,6 +2205,7 @@ function fillStars(box, n){
 function buildCosmosStars(){
   fillStars(document.getElementById('cosmosStars'), 42);
   fillStars(document.getElementById('cosmosStarsChantiers'), 55);
+  fillStars(document.getElementById('cosmosStarsAccueil'), 55);
 }
 
 // Marque / démarque un devis comme accepté ; sa somme alimente le cadre "Devis acceptés" en Comptabilité
